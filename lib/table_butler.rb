@@ -4,6 +4,13 @@ require 'active_support/core_ext/string/inflections'
 
 class Table_Butler
 #This will work as long as your class attribute name is equal to your DB column name
+  def initialize(attributes)
+    keys = attributes.keys
+    keys.each do |key|
+      self.instance_variable_set('@'+key, attributes[key])
+    end
+  end
+
   def save
     table_name = self.class.to_s.downcase.pluralize
     values = ""
@@ -29,6 +36,12 @@ class Table_Butler
     class_instances = []
     results = DB.exec("SELECT * FROM #{table_name};")
     results.each do |result|
+      result.each do |key, value|
+        if ((/[0-9]/ =~ value[0]) == 0) && (!value.include? ":")
+          value = value.to_i
+        end
+        result[key] = value
+      end
       class_instances << self.new(result)
     end
     class_instances
